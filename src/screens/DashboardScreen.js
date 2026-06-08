@@ -82,7 +82,7 @@ export default function DashboardScreen({ nav, user }) {
   const alertasAtivos = alertas.filter((a) => a.ativo);
   const areaTotal = talhoes.reduce((acc, x) => acc + (Number(x.ha) || 0), 0);
   const primeiroNome = (user?.nome || 'Produtor').split(' ')[0];
-  const destaque = alertasAtivos[0] || alertas[0];
+  const destaque = alertasAtivos[0] || null; // "Atenção agora" só mostra alerta ATIVO
   const temVarias = (propriedades || []).length > 1;
 
   return (

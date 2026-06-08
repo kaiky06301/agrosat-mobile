@@ -147,6 +147,9 @@ export async function atualizarTalhao(id, patch) {
   });
   merged.alerta = severidadeDe(merged.umidade, merged);
   db.talhoes[i] = merged;
+  // editar re-avalia o alerta: se a umidade continua fora do ideal, ele volta
+  // a ficar ativo; só fica resolvido se a umidade entrar na faixa ideal.
+  reavaliarUmidade(db, merged);
   await setDB(db);
   return merged;
 }
@@ -163,6 +166,12 @@ export async function removerTalhao(id) {
 // ---------- Alertas ----------
 export async function listarAlertas(propId) {
   const db = await getDB();
+  // mantém os alertas coerentes com o estado atual dos talhões:
+  // talhão fora do ideal -> alerta ativo; dentro do ideal -> resolvido.
+  db.talhoes
+    .filter((t) => t.idPropriedade === propId)
+    .forEach((t) => reavaliarUmidade(db, t));
+  await setDB(db);
   return db.alertas.filter((a) => a.idPropriedade === propId);
 }
 
@@ -222,24 +231,41 @@ export async function registrarLeitura(talId, valores) {
   t.umidade = leitura.solo;
   t.alerta = severidadeDe(t.umidade, t);
 
-  // regra de negócio: avalia e gera/atualiza/resolve alerta automático.
-  // Apenas UM alerta de umidade ativo por talhão (evita duplicados).
-  const ehUmidade = (tp) => tp === 'SECA' || tp === 'EXCESSO_UMIDADE';
-  const diag = avaliarUmidade(t, leitura.solo);
-  let alertaGerado = null;
+  // regra de negócio: reavalia o alerta de umidade conforme a leitura nova
+  const alertaGerado = reavaliarUmidade(db, t);
+
+  await setDB(db);
+  return { leitura, alertaGerado, talhao: t };
+}
+
+// Severidade de exibição do talhão a partir da umidade atual
+function severidadeDe(umidade, talhao) {
+  const diag = avaliarUmidade(talhao, umidade);
+  if (!diag) return 'BAIXA';
+  return diag.sev; // 'ALTA' | 'MEDIA'
+}
+
+const ehUmidade = (tp) => tp === 'SECA' || tp === 'EXCESSO_UMIDADE';
+
+// Reavalia o alerta de umidade de um talhão conforme a umidade ATUAL dele.
+// Mantém UM alerta de umidade por talhão, refletindo o estado real:
+//   • fora do ideal  -> garante ALERTA ATIVO (reativa/atualiza/cria)
+//   • dentro do ideal -> resolve o alerta de umidade
+// Chamado ao registrar leitura E ao editar o talhão.
+function reavaliarUmidade(db, t) {
+  const diag = avaliarUmidade(t, t.umidade);
   if (diag) {
-    const existente = db.alertas.find((a) => a.talId === t.id && a.ativo && ehUmidade(a.tipo));
-    if (existente) {
-      // já há um alerta de umidade ativo → atualiza com a leitura nova (não duplica)
-      existente.tipo = diag.tipo;
-      existente.sev = diag.sev;
-      existente.rec = diag.rec;
-      existente.talhao = t.nome;
-      existente.quando = 'agora';
-      existente.auto = true;
-      alertaGerado = existente;
+    let alerta = db.alertas.find((a) => a.talId === t.id && ehUmidade(a.tipo));
+    if (alerta) {
+      alerta.tipo = diag.tipo;
+      alerta.sev = diag.sev;
+      alerta.rec = diag.rec;
+      alerta.talhao = t.nome;
+      alerta.quando = 'agora';
+      alerta.ativo = true; // reativa se estava resolvido e o problema persiste
+      alerta.auto = true;
     } else {
-      alertaGerado = {
+      alerta = {
         id: nextId(db),
         idPropriedade: t.idPropriedade,
         talId: t.id,
@@ -251,22 +277,13 @@ export async function registrarLeitura(talId, valores) {
         ativo: true,
         auto: true,
       };
-      db.alertas.unshift(alertaGerado);
+      db.alertas.unshift(alerta);
     }
-  } else {
-    // voltou ao ideal → resolve alertas de umidade ativos do talhão
-    db.alertas = db.alertas.map((a) =>
-      a.talId === t.id && a.ativo && ehUmidade(a.tipo) ? { ...a, ativo: false } : a
-    );
+    return alerta;
   }
-
-  await setDB(db);
-  return { leitura, alertaGerado, talhao: t };
-}
-
-// Severidade de exibição do talhão a partir da umidade atual
-function severidadeDe(umidade, talhao) {
-  const diag = avaliarUmidade(talhao, umidade);
-  if (!diag) return 'BAIXA';
-  return diag.sev; // 'ALTA' | 'MEDIA'
+  // voltou ao ideal -> resolve alertas de umidade ativos do talhão
+  db.alertas = db.alertas.map((a) =>
+    a.talId === t.id && a.ativo && ehUmidade(a.tipo) ? { ...a, ativo: false } : a
+  );
+  return null;
 }
