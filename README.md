@@ -10,14 +10,14 @@ temperatura, etc.) e gera **alertas e recomendações de irrigação** por talh�
 ---
 
 ## 👥 Integrantes do grupo
-<!-- PREENCHER -->
-- Nome — RM
-- Nome — RM
-- Nome — RM
+- Erick Bernardes Bradaschia — RM 565733
+- Gabriel Santos Claudino — RM 564054
+- Jonathan Moreira Gomes — RM 565060
+- Kaiky de Oliveira Silva — RM 566067
+- Lucas Fortes de Lima — RM 559523
 
 ## 🎥 Vídeo de demonstração
-<!-- PREENCHER com o link do YouTube -->
-- YouTube: _link aqui_
+- YouTube: https://youtu.be/NfyEzVIzDFE
 
 ---
 
