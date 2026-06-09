@@ -59,7 +59,8 @@ export default function LoginScreen({ nav, onAuth }) {
           </Pressable>
           <View style={styles.demo}>
             <Text style={styles.demoTit}>{t('login.demo')}</Text>
-            <Text style={styles.demoTxt}>admin@agrosat.com.br · 123456</Text>
+            <Text style={styles.demoTxt}>kaiky@boavista.agr.br · soja2026</Text>
+            <Text style={styles.demoTxt}>felipe@cafedoalto.agr.br · cafe2026</Text>
           </View>
         </View>
       </View>
