@@ -10,7 +10,7 @@ import { Button, SpaceBg } from '../components/ui';
 import { fonts } from '../theme/colors';
 import { useTheme } from '../theme/ThemeContext';
 import { useSettings } from '../context/Settings';
-import { emailExiste, cadastrar } from '../data/agro';
+import { cadastrar, login } from '../services/auth';
 
 export default function CadastroScreen({ nav, onAuth }) {
   const { colors } = useTheme();
@@ -22,13 +22,22 @@ export default function CadastroScreen({ nav, onAuth }) {
   const [senha, setSenha] = useState('');
   const [show, setShow] = useState(false);
   const [erro, setErro] = useState(null);
+  const [carregando, setCarregando] = useState(false);
 
-  function criar() {
+  async function criar() {
     setErro(null);
     if (!nome.trim() || !email.trim() || !senha) return setErro(t('cadastro.errCampos'));
     if (!email.includes('@')) return setErro(t('cadastro.errCampos'));
-    if (emailExiste(email)) return setErro(t('cadastro.errEmail'));
-    onAuth(cadastrar({ nome, email, senha }));
+    try {
+      setCarregando(true);
+      await cadastrar({ nome: nome.trim(), email: email.trim(), senha });
+      const u = await login(email.trim(), senha); // já entra após cadastrar
+      onAuth(u);
+    } catch (e) {
+      setErro(t('cadastro.errEmail'));
+    } finally {
+      setCarregando(false);
+    }
   }
 
   return (
@@ -46,7 +55,7 @@ export default function CadastroScreen({ nav, onAuth }) {
           <Field icon="lock" label={t('cadastro.senha')} value={senha} onChange={setSenha} secure={!show} placeholder="••••••"
             trailing={<Pressable onPress={() => setShow((s) => !s)}><Icon name="eye" size={19} color={colors.muted} /></Pressable>} />
           {erro ? <Text style={styles.erro}>{erro}</Text> : null}
-          <Button full onPress={criar} style={{ marginTop: 4 }}>{t('cadastro.criar')}</Button>
+          <Button full onPress={criar} disabled={carregando} style={{ marginTop: 4 }}>{carregando ? '...' : t('cadastro.criar')}</Button>
           <Pressable onPress={() => nav('login')}>
             <Text style={styles.foot}>{t('cadastro.jaTenho')}</Text>
           </Pressable>

@@ -43,15 +43,18 @@ Notificações · Configurações · Sobre.
 
 Navegação com **`@react-navigation/native-stack`** + TabBar customizada.
 
-## 🔌 Integração com a API (CRUD via Axios)
-A camada de dados fica em `src/services/`:
-- **`dataService.js`** — única porta de dados das telas. Decide a fonte por um flag:
-  - `USE_MOCK = false` → consome a **API REST (Java/.NET) via Axios** (com token JWT).
-  - `USE_MOCK = true` → usa um banco local persistente (`store.js`, AsyncStorage) para
-    rodar/demonstrar sem o backend no ar.
-- **`api.js`** — instância Axios (base URL + interceptor que injeta o JWT).
+## 🔌 Integração com a API (CRUD via Axios) — **API real (não é mock)**
+O app **consome a API Java (Spring Boot)** publicada na nuvem, via **Axios**. Os dados são
+criados, lidos, editados e excluídos **na API** (não ficam só no dispositivo). A camada fica
+em `src/services/`:
+- **`auth.ts`** — login na API: recebe o **token JWT**, guarda no AsyncStorage e o envia nas
+  próximas requisições. (A geração e a validação do JWT são feitas no **backend**, não no app.)
+- **`api.ts`** — instância Axios (base URL da API na nuvem + envio do token).
+- **`dataService.ts`** — porta única de dados das telas; traduz o formato da API ↔ telas.
+- `store.ts` fica como fallback offline (`USE_MOCK = true`), mas o padrão é `false` (API real).
 
-Para ligar na API real: em `src/services/api.js`, ajuste `API_URL` e mude `USE_MOCK` para `false`.
+**API publicada:** `https://agrosat-api-566067.azurewebsites.net/api`
+**Login de teste:** `admin@agrosat.com.br` / `123456`
 O contrato dos endpoints está em `../CONTRATO-DOMINIO.md`.
 
 ## 🏗️ Arquitetura / organização
@@ -69,8 +72,8 @@ App.js          navegação (React Navigation) + provedores + frame de celular
 ```
 
 ## 🛠️ Tecnologias
-Expo SDK 54 · React Native 0.81 · React Navigation (native-stack) · Axios · AsyncStorage ·
-react-native-svg · expo-linear-gradient · @react-native-community/slider ·
+**TypeScript** · Expo SDK 54 · React Native 0.81 · React Navigation (native-stack) · **Axios (consumo da API Java + JWT)** ·
+AsyncStorage · react-native-svg · expo-linear-gradient · @react-native-community/slider ·
 Google Fonts (Space Grotesk + JetBrains Mono).
 
 ## ▶️ Como rodar

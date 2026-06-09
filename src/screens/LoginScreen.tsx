@@ -10,7 +10,7 @@ import { Button, SpaceBg } from '../components/ui';
 import { alpha, fonts } from '../theme/colors';
 import { useTheme } from '../theme/ThemeContext';
 import { useSettings } from '../context/Settings';
-import { autenticar } from '../data/agro';
+import { login } from '../services/auth';
 
 export default function LoginScreen({ nav, onAuth }) {
   const { colors, line } = useTheme();
@@ -21,13 +21,20 @@ export default function LoginScreen({ nav, onAuth }) {
   const [senha, setSenha] = useState('');
   const [show, setShow] = useState(false);
   const [erro, setErro] = useState(null);
+  const [carregando, setCarregando] = useState(false);
 
-  function entrar() {
+  async function entrar() {
     setErro(null);
     if (!email.trim() || !senha) return setErro(t('login.errPreencher'));
-    const u = autenticar(email, senha);
-    if (!u) return setErro(t('login.errCredenciais'));
-    onAuth(u);
+    try {
+      setCarregando(true);
+      const u = await login(email.trim(), senha); // recebe o token da API e guarda
+      onAuth(u);
+    } catch (e) {
+      setErro(t('login.errCredenciais'));
+    } finally {
+      setCarregando(false);
+    }
   }
 
   return (
@@ -46,14 +53,13 @@ export default function LoginScreen({ nav, onAuth }) {
           <Pressable onPress={() => nav('recuperar')} style={{ alignSelf: 'flex-end' }}>
             <Text style={{ color: colors.primary, fontSize: 13, fontFamily: fonts.displayMed }}>{t('login.esqueci')}</Text>
           </Pressable>
-          <Button full onPress={entrar}>{t('login.entrar')}</Button>
+          <Button full onPress={entrar} disabled={carregando}>{carregando ? '...' : t('login.entrar')}</Button>
           <Pressable onPress={() => nav('cadastro')}>
             <Text style={styles.foot}>{t('login.novo')}<Text style={{ color: colors.ink, fontFamily: fonts.displayMed }}>{t('login.criarConta')}</Text></Text>
           </Pressable>
           <View style={styles.demo}>
             <Text style={styles.demoTit}>{t('login.demo')}</Text>
-            <Text style={styles.demoTxt}>kaiky@boavista.agr.br · soja2026</Text>
-            <Text style={styles.demoTxt}>felipe@cafedoalto.agr.br · cafe2026</Text>
+            <Text style={styles.demoTxt}>admin@agrosat.com.br · 123456</Text>
           </View>
         </View>
       </View>
