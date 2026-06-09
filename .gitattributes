@@ -1,0 +1,4 @@
+# Garante a deteccao correta da linguagem no GitHub (projeto TypeScript)
+*.tsx linguist-language=TypeScript
+*.ts  linguist-language=TypeScript
+*.js  linguist-language=JavaScript
