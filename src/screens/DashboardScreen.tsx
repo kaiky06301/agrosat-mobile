@@ -103,6 +103,14 @@ function SateliteCard({ propId }) {
             <SatKpi value={`${data.chuvaTotalMm ?? '—'}`} label="Chuva mm" />
             <SatKpi value={`${data.radiacaoSolarMediaKwhM2Dia ?? '—'}`} label="Radiação" />
           </View>
+          {data.ndviMedio != null && (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 12 }}>
+              <View style={{ paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8, backgroundColor: alpha(colors.low, 0.16) }}>
+                <Text style={{ color: colors.low, fontSize: 11, fontFamily: fonts.monoSemi }}>NDVI {Number(data.ndviMedio).toFixed(2)}</Text>
+              </View>
+              <Text style={{ color: colors.sub, fontSize: 11.5 }}>vegetação · Sentinel-2</Text>
+            </View>
+          )}
           <Text style={{ color: colors.ink, fontSize: 13, marginTop: 14, lineHeight: 19 }}>{data.recomendacao}</Text>
           <Text style={{ color: colors.muted, fontSize: 10.5, marginTop: 8, fontFamily: fonts.mono }}>{data.fonte} · {data.periodo}</Text>
         </>
