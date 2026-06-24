@@ -242,6 +242,15 @@ export async function registrarLeitura(talId, valores) {
   return { leitura, alertaGerado, talhao };
 }
 
+// ---------------- Satélite (NASA POWER — dados reais) ----------------
+// Consome GET /api/satelite/propriedade/{id}: clima e radiação solar reais
+// de satélite (MERRA-2/CERES), cruzados com a lat/lon da propriedade.
+export async function getSatelite(propId) {
+  if (USE_MOCK) { await mockDelay(); return null; }
+  const { data } = await api.get(`/satelite/propriedade/${propId}`);
+  return data;
+}
+
 // Resumo agregado de uma propriedade (dashboard)
 export async function getResumoPropriedade(propId) {
   const [talhoes, alertas] = await Promise.all([getTalhoes(propId), getAlertas(propId)]);

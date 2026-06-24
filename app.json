@@ -30,6 +30,9 @@
     },
     "plugins": [
       "expo-font"
-    ]
+    ],
+    "experiments": {
+      "baseUrl": "/agrosat-mobile"
+    }
   }
 }

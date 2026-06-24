@@ -13,7 +13,7 @@ import { useSettings } from '../context/Settings';
 import { useAppData } from '../context/AppData';
 import useAsync from '../hooks/useAsync';
 import { primeiraLetra } from '../data/agro';
-import { getResumoPropriedade } from '../services/dataService';
+import { getResumoPropriedade, getSatelite } from '../services/dataService';
 
 function saudacaoKey() {
   const h = new Date().getHours();
@@ -62,6 +62,52 @@ function AlertMini({ a, onPress }) {
       </View>
       <Icon name="chevR" size={18} color={colors.sub} />
     </Pressable>
+  );
+}
+
+function SatKpi({ value, label }) {
+  const { colors, line } = useTheme();
+  const s = makeStyles(colors, line);
+  return (
+    <View style={s.satKpi}>
+      <Text style={s.satVal}>{value}</Text>
+      <Text style={s.satLabel}>{label}</Text>
+    </View>
+  );
+}
+
+// Card com dados de satélite REAIS (NASA POWER) da propriedade ativa.
+function SateliteCard({ propId }) {
+  const { colors, line } = useTheme();
+  const s = makeStyles(colors, line);
+  const { data, loading, error } = useAsync(
+    () => (propId ? getSatelite(propId) : Promise.resolve(null)),
+    [propId]
+  );
+  if (!propId) return null;
+  return (
+    <Card style={{ marginTop: 20, padding: 18 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        <Icon name="pin" size={16} color={colors.primary} />
+        <Text style={{ color: colors.primary, fontSize: 12, fontFamily: fonts.mono, letterSpacing: 0.5 }}>SATÉLITE · NASA POWER</Text>
+      </View>
+      {loading ? (
+        <Text style={{ color: colors.sub, fontSize: 13, marginTop: 12 }}>Consultando satélite…</Text>
+      ) : error || !data ? (
+        <Text style={{ color: colors.sub, fontSize: 13, marginTop: 12 }}>Dados de satélite indisponíveis no momento.</Text>
+      ) : (
+        <>
+          <View style={{ flexDirection: 'row', gap: 8, marginTop: 14 }}>
+            <SatKpi value={`${data.temperaturaMediaC ?? '—'}°`} label="Temp. ar" />
+            <SatKpi value={`${data.umidadeRelativaMediaPct ?? '—'}%`} label="Umid. ar" />
+            <SatKpi value={`${data.chuvaTotalMm ?? '—'}`} label="Chuva mm" />
+            <SatKpi value={`${data.radiacaoSolarMediaKwhM2Dia ?? '—'}`} label="Radiação" />
+          </View>
+          <Text style={{ color: colors.ink, fontSize: 13, marginTop: 14, lineHeight: 19 }}>{data.recomendacao}</Text>
+          <Text style={{ color: colors.muted, fontSize: 10.5, marginTop: 8, fontFamily: fonts.mono }}>{data.fonte} · {data.periodo}</Text>
+        </>
+      )}
+    </Card>
   );
 }
 
@@ -145,6 +191,8 @@ export default function DashboardScreen({ nav, user }) {
         </View>
       </Card>
 
+      <SateliteCard propId={propAtiva?.id} />
+
       {loading ? (
         <Loading label={t('dashboard.carregando')} />
       ) : error ? (
@@ -210,6 +258,9 @@ const makeStyles = (colors, line) => StyleSheet.create({
   kpi: { flex: 1, borderRadius: 16, backgroundColor: alpha(colors.bg, 0.6), borderWidth: 1, borderColor: line || 'transparent', paddingVertical: 12, alignItems: 'center' },
   kpiVal: { fontFamily: fonts.monoSemi, fontSize: 24 },
   kpiLabel: { fontSize: 10.5, color: colors.muted, marginTop: 6 },
+  satKpi: { flex: 1, borderRadius: 14, backgroundColor: alpha(colors.bg, 0.6), borderWidth: 1, borderColor: line || 'transparent', paddingVertical: 10, alignItems: 'center' },
+  satVal: { fontFamily: fonts.monoSemi, fontSize: 17, color: colors.ink },
+  satLabel: { fontSize: 9.5, color: colors.muted, marginTop: 5 },
   section: { fontFamily: fonts.displaySemi, color: colors.ink, fontSize: 16 },
   alertMini: { flexDirection: 'row', alignItems: 'center', gap: 14, borderRadius: 16, padding: 16, borderWidth: 1 },
   alertIcon: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
