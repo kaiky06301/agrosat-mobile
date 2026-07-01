@@ -32,6 +32,21 @@ export function setAuthToken(token) {
   else delete api.defaults.headers.common.Authorization;
 }
 
+// Web (F5/reload): restaura token e id do usuário do localStorage de forma SÍNCRONA,
+// antes de qualquer requisição. Sem isso, o app carregava as fazendas antes do token
+// ser restaurado (a restauração via AsyncStorage é assíncrona) e vinha "Nenhuma fazenda".
+try {
+  if (typeof localStorage !== 'undefined') {
+    const t = localStorage.getItem('@agrosat:token');
+    if (t) api.defaults.headers.common.Authorization = `Bearer ${t}`;
+    const u = localStorage.getItem('agrosat-user');
+    if (u) {
+      const parsed = JSON.parse(u);
+      if (parsed && parsed.id != null) sessionUserId = parsed.id;
+    }
+  }
+} catch (e) {}
+
 export const mockDelay = (ms = 400) => new Promise((r) => setTimeout(r, ms));
 
 export default api;
