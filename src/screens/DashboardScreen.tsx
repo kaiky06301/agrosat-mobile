@@ -9,6 +9,7 @@ import { Card, SevChip, Bar } from '../components/ui';
 import { Loading, ErrorBox } from '../components/AsyncBox';
 import { alpha, fonts } from '../theme/colors';
 import { useTheme } from '../theme/ThemeContext';
+import MapaSatelite from '../components/MapaSatelite';
 import { useSettings } from '../context/Settings';
 import { useAppData } from '../context/AppData';
 import useAsync from '../hooks/useAsync';
@@ -113,6 +114,7 @@ function SateliteCard({ propId }) {
           )}
           <Text style={{ color: colors.ink, fontSize: 13, marginTop: 14, lineHeight: 19 }}>{data.recomendacao}</Text>
           <Text style={{ color: colors.muted, fontSize: 10.5, marginTop: 8, fontFamily: fonts.mono }}>{data.fonte} · {data.periodo}</Text>
+          <MapaSatelite lat={data.latitude} lon={data.longitude} />
         </>
       )}
     </Card>
