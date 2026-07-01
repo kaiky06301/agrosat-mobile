@@ -13,8 +13,8 @@ import { fonts } from '../theme/colors';
 import { useTheme } from '../theme/ThemeContext';
 import { useSettings } from '../context/Settings';
 import { useAppData } from '../context/AppData';
-import { getPropriedades, addPropriedade, updatePropriedade, deletePropriedade, geocode } from '../services/dataService';
-import MapaSatelite from '../components/MapaSatelite';
+import { getPropriedades, addPropriedade, updatePropriedade, deletePropriedade, geocode, geocodeReverso } from '../services/dataService';
+import MapaSelecao from '../components/MapaSelecao';
 
 export default function FazendaFormScreen({ nav, param }) {
   const { colors } = useTheme();
@@ -57,6 +57,20 @@ export default function FazendaFormScreen({ nav, param }) {
     setBuscando(false);
   }
 
+  // Usuário clicou/arrastou o pin no mapa: guarda o ponto exato e identifica cidade/estado.
+  async function onPontoMapa(la, lo) {
+    setGeo((g) => ({ ...(g || {}), lat: la, lon: lo }));
+    setErroGeo(null);
+    try {
+      const g = await geocodeReverso(la, lo);
+      setGeo({ cidade: g.cidade, estado: g.estado, uf: g.uf, lat: la, lon: lo });
+      setLocal(g.uf ? `${g.cidade}/${g.uf}` : g.cidade || '');
+    } catch (e) {
+      const msg = e?.response?.data?.error || 'Ponto sem localidade reconhecida. Marque sobre terra, no Brasil.';
+      setErroGeo(msg);
+    }
+  }
+
   useEffect(() => {
     let on = true;
     if (editId && user) {
@@ -80,6 +94,7 @@ export default function FazendaFormScreen({ nav, param }) {
   async function salvar() {
     setErro(null);
     if (!nome.trim()) return setErro(t('fazendaForm.errNome'));
+    if (!editId && geo?.lat == null) return setErro('Marque a localização da fazenda no mapa (busque a cidade e toque no ponto).');
     setSaving(true);
     try {
       const dados = {
@@ -148,15 +163,23 @@ export default function FazendaFormScreen({ nav, param }) {
             </Pressable>
           </View>
           {erroGeo ? <Text style={{ color: colors.high, fontSize: 12.5, marginLeft: 4 }}>{erroGeo}</Text> : null}
-          {geo ? (
+          {geo && geo.cidade ? (
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginLeft: 4 }}>
               <Icon name="pin" size={15} color={colors.primary} />
               <Text style={{ color: colors.ink, fontSize: 13.5, fontFamily: fonts.displayMed }}>
-                {geo.cidade}{geo.uf ? `, ${geo.uf}` : ''} · {geo.estado}
+                {geo.cidade}{geo.uf ? `, ${geo.uf}` : ''}{geo.estado ? ` · ${geo.estado}` : ''}
               </Text>
             </View>
           ) : null}
-          {geo ? <MapaSatelite lat={geo.lat} lon={geo.lon} height={150} /> : null}
+          <Text style={{ color: colors.muted, fontSize: 11.5, marginLeft: 4 }}>
+            Toque no mapa (ou arraste o pino) para marcar o ponto exato da fazenda.
+          </Text>
+          <MapaSelecao lat={geo?.lat} lon={geo?.lon} onChange={onPontoMapa} height={260} />
+          {geo?.lat != null ? (
+            <Text style={{ color: colors.muted, fontSize: 10.5, marginLeft: 4, fontFamily: fonts.mono }}>
+              {Number(geo.lat).toFixed(5)}, {Number(geo.lon).toFixed(5)}
+            </Text>
+          ) : null}
         </View>
 
         <Field icon="layers" label={t('fazendaForm.area')} value={ha} onChange={setHa} keyboardType="numeric" placeholder={t('fazendaForm.areaPh')} />

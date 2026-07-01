@@ -127,6 +127,19 @@ export async function geocode(q) {
   };
 }
 
+// Geocodificacao reversa: ponto (lat/lon) do mapa -> { cidade, estado, uf }.
+export async function geocodeReverso(lat, lon) {
+  const { data } = await api.get('/geocode/reverse', { params: { lat, lon } });
+  return {
+    cidade: data.cidade,
+    estado: data.estado,
+    uf: data.uf,
+    lat: data.latitude != null ? Number(data.latitude) : lat,
+    lon: data.longitude != null ? Number(data.longitude) : lon,
+    descricao: data.descricao,
+  };
+}
+
 export async function addPropriedade(userId, dados) {
   if (USE_MOCK) { await mockDelay(); return store.criarPropriedade(userId, dados); }
   const { data } = await api.post('/propriedades', propParaApi(userId, dados));
