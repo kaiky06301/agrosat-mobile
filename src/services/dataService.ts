@@ -42,7 +42,11 @@ function propDaApi(p) {
   };
 }
 function propParaApi(userId, d) {
-  return { idUsuario: userId, nome: d.nome, municipio: d.local, areaTotalHa: num(d.ha) };
+  const base = { idUsuario: userId, nome: d.nome, municipio: d.local, areaTotalHa: num(d.ha) };
+  if (d.uf) base.uf = d.uf;
+  if (d.lat != null) base.latitude = d.lat;
+  if (d.lon != null) base.longitude = d.lon;
+  return base;
 }
 
 function talhaoDaApi(t) {
@@ -108,6 +112,19 @@ export async function getPropriedades(userId) {
   if (USE_MOCK) { await mockDelay(); return store.listarPropriedades(userId); }
   const { data } = await api.get('/propriedades');
   return comoLista(data).map(propDaApi).filter((p) => p.idUsuario === userId);
+}
+
+// Geocodifica um texto (cidade/regiao) -> { cidade, estado, uf, lat, lon }.
+export async function geocode(q) {
+  const { data } = await api.get('/geocode', { params: { q } });
+  return {
+    cidade: data.cidade,
+    estado: data.estado,
+    uf: data.uf,
+    lat: data.latitude != null ? Number(data.latitude) : null,
+    lon: data.longitude != null ? Number(data.longitude) : null,
+    descricao: data.descricao,
+  };
 }
 
 export async function addPropriedade(userId, dados) {

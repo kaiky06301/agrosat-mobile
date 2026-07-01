@@ -13,7 +13,8 @@ import { fonts } from '../theme/colors';
 import { useTheme } from '../theme/ThemeContext';
 import { useSettings } from '../context/Settings';
 import { useAppData } from '../context/AppData';
-import { getPropriedades, addPropriedade, updatePropriedade, deletePropriedade } from '../services/dataService';
+import { getPropriedades, addPropriedade, updatePropriedade, deletePropriedade, geocode } from '../services/dataService';
+import MapaSatelite from '../components/MapaSatelite';
 
 export default function FazendaFormScreen({ nav, param }) {
   const { colors } = useTheme();
@@ -29,6 +30,32 @@ export default function FazendaFormScreen({ nav, param }) {
   const [saving, setSaving] = useState(false);
   const [erro, setErro] = useState(null);
   const [confirmar, setConfirmar] = useState(false);
+  // Localização geocodada (cidade/uf/coordenadas) que alimenta o satélite.
+  const [busca, setBusca] = useState('');
+  const [geo, setGeo] = useState(null);
+  const [buscando, setBuscando] = useState(false);
+  const [erroGeo, setErroGeo] = useState(null);
+
+  async function buscarLocal() {
+    const q = busca.trim();
+    if (!q) return;
+    setErroGeo(null);
+    setBuscando(true);
+    try {
+      const g = await geocode(q);
+      if (g?.lat == null) {
+        setErroGeo('Local não encontrado. Tente "Cidade, UF".');
+        setGeo(null);
+      } else {
+        setGeo(g);
+        setLocal(g.uf ? `${g.cidade}/${g.uf}` : g.cidade);
+      }
+    } catch (e) {
+      setErroGeo('Não foi possível buscar o local agora.');
+      setGeo(null);
+    }
+    setBuscando(false);
+  }
 
   useEffect(() => {
     let on = true;
@@ -55,7 +82,14 @@ export default function FazendaFormScreen({ nav, param }) {
     if (!nome.trim()) return setErro(t('fazendaForm.errNome'));
     setSaving(true);
     try {
-      const dados = { nome: nome.trim(), local: local.trim() || '—', ha: Number(ha) || 0 };
+      const dados = {
+        nome: nome.trim(),
+        local: local.trim() || '—',
+        ha: Number(ha) || 0,
+        uf: geo?.uf,
+        lat: geo?.lat,
+        lon: geo?.lon,
+      };
       if (editId) {
         await updatePropriedade(editId, dados);
       } else {
@@ -98,7 +132,33 @@ export default function FazendaFormScreen({ nav, param }) {
       <Header title={editId ? t('fazendaForm.editar') : t('fazendaForm.nova')} onBack={() => nav('fazendas')} />
       <View style={{ gap: 14, marginTop: 18 }}>
         <Field icon="pin" label={t('fazendaForm.nome')} value={nome} onChange={setNome} placeholder={t('fazendaForm.nomePh')} />
-        <Field icon="satellite" label={t('fazendaForm.local')} value={local} onChange={setLocal} placeholder={t('fazendaForm.localPh')} />
+
+        {/* Localização: usuário digita a cidade/região e o sistema resolve estado, cidade e coordenadas (satélite). */}
+        <View style={{ gap: 8 }}>
+          <Text style={{ color: colors.sub, fontSize: 12.5, marginLeft: 4, fontFamily: fonts.displayMed }}>Localização (cidade/região)</Text>
+          <View style={{ flexDirection: 'row', gap: 8, alignItems: 'flex-end' }}>
+            <View style={{ flex: 1 }}>
+              <Field icon="satellite" value={busca} onChange={setBusca} placeholder="Ex.: Sorriso, MT" onSubmitEditing={buscarLocal} />
+            </View>
+            <Pressable
+              onPress={buscarLocal}
+              style={{ height: 52, paddingHorizontal: 16, borderRadius: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.primary }}
+            >
+              <Text style={{ color: '#04140a', fontFamily: fonts.displaySemi, fontSize: 14 }}>{buscando ? '…' : 'Buscar'}</Text>
+            </Pressable>
+          </View>
+          {erroGeo ? <Text style={{ color: colors.high, fontSize: 12.5, marginLeft: 4 }}>{erroGeo}</Text> : null}
+          {geo ? (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginLeft: 4 }}>
+              <Icon name="pin" size={15} color={colors.primary} />
+              <Text style={{ color: colors.ink, fontSize: 13.5, fontFamily: fonts.displayMed }}>
+                {geo.cidade}{geo.uf ? `, ${geo.uf}` : ''} · {geo.estado}
+              </Text>
+            </View>
+          ) : null}
+          {geo ? <MapaSatelite lat={geo.lat} lon={geo.lon} height={150} /> : null}
+        </View>
+
         <Field icon="layers" label={t('fazendaForm.area')} value={ha} onChange={setHa} keyboardType="numeric" placeholder={t('fazendaForm.areaPh')} />
 
         {erro ? <Text style={{ color: colors.high, fontSize: 13, marginLeft: 4 }}>{erro}</Text> : null}
