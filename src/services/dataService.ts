@@ -39,6 +39,7 @@ function propDaApi(p) {
     nome: p.nome,
     local: p.municipio || p.uf || '—',
     ha: num(p.areaTotalHa),
+    contorno: p.contorno || null,
   };
 }
 function propParaApi(userId, d) {
@@ -46,6 +47,7 @@ function propParaApi(userId, d) {
   if (d.uf) base.uf = d.uf;
   if (d.lat != null) base.latitude = d.lat;
   if (d.lon != null) base.longitude = d.lon;
+  if (d.contorno) base.contorno = d.contorno;
   return base;
 }
 
