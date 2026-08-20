@@ -53,7 +53,7 @@ export default function CadastroScreen({ nav, onAuth }) {
           <Field icon="leaf" label={t('cadastro.nome')} value={nome} onChange={setNome} placeholder={t('cadastro.nome')} />
           <Field icon="mail" label={t('cadastro.email')} value={email} onChange={setEmail} placeholder={t('login.emailPh')} keyboardType="email-address" />
           <Field icon="lock" label={t('cadastro.senha')} value={senha} onChange={setSenha} secure={!show} placeholder="••••••"
-            trailing={<Pressable onPress={() => setShow((s) => !s)}><Icon name="eye" size={19} color={colors.muted} /></Pressable>} />
+            trailing={<Pressable onPress={() => setShow((v) => !v)} hitSlop={10}><Icon name={show ? 'eyeOff' : 'eye'} size={19} color={colors.muted} /></Pressable>} />
           {erro ? <Text style={styles.erro}>{erro}</Text> : null}
           <Button full onPress={criar} disabled={carregando} style={{ marginTop: 4 }}>{carregando ? '...' : t('cadastro.criar')}</Button>
           <Pressable onPress={() => nav('login')}>

@@ -72,6 +72,8 @@ export function EditarPerfilScreen({ nav, user, onUpdate }) {
   const [email, setEmail] = useState(user?.email || '');
   const [novaSenha, setNovaSenha] = useState('');
   const [confirmar, setConfirmar] = useState('');
+  // Um olho so para os dois campos: conferir se digitou igual e o ponto de
+  // ter "nova senha" + "confirmar", e revelar um sem o outro nao ajuda em nada.
   const [show, setShow] = useState(false);
   const [erro, setErro] = useState(null);
   const [ok, setOk] = useState(false);
@@ -100,9 +102,9 @@ export function EditarPerfilScreen({ nav, user, onUpdate }) {
         <View style={{ height: 1, backgroundColor: line, marginTop: 6 }} />
         <Text style={{ color: colors.muted, fontSize: 12, fontFamily: fonts.displayMed, marginLeft: 4 }}>{t('editarPerfil.trocarSenha')}</Text>
         <Field icon="lock" label={t('editarPerfil.novaSenha')} value={novaSenha} onChange={setNovaSenha} secure={!show} placeholder="••••••"
-          trailing={<Pressable onPress={() => setShow((s) => !s)}><Icon name="eye" size={19} color={colors.muted} /></Pressable>} />
+          trailing={<Pressable onPress={() => setShow((v) => !v)} hitSlop={10}><Icon name={show ? 'eyeOff' : 'eye'} size={19} color={colors.muted} /></Pressable>} />
         <Field icon="lock" label={t('editarPerfil.confirmarSenha')} value={confirmar} onChange={setConfirmar} secure={!show} placeholder="••••••"
-          trailing={<Pressable onPress={() => setShow((s) => !s)}><Icon name="eye" size={19} color={colors.muted} /></Pressable>} />
+          trailing={<Pressable onPress={() => setShow((v) => !v)} hitSlop={10}><Icon name={show ? 'eyeOff' : 'eye'} size={19} color={colors.muted} /></Pressable>} />
 
         {erro ? <Text style={{ color: colors.high, fontSize: 13, marginLeft: 4 }}>{erro}</Text> : null}
 
