@@ -48,7 +48,7 @@ export default function LoginScreen({ nav, onAuth }) {
         <View style={{ marginTop: 'auto', gap: 14 }}>
           <Field icon="mail" label={t('login.email')} value={email} onChange={setEmail} placeholder={t('login.emailPh')} keyboardType="email-address" />
           <Field icon="lock" label={t('login.senha')} value={senha} onChange={setSenha} secure={!show} placeholder="••••••"
-            trailing={<Pressable onPress={() => setShow((v) => !v)} hitSlop={10}><Icon name={show ? 'eyeOff' : 'eye'} size={19} color={colors.muted} /></Pressable>} />
+            trailing={<Pressable onPress={() => setShow((s) => !s)}><Icon name="eye" size={19} color={colors.muted} /></Pressable>} />
           {erro ? <Text style={styles.erro}>{erro}</Text> : null}
           <Pressable onPress={() => nav('recuperar')} style={{ alignSelf: 'flex-end' }}>
             <Text style={{ color: colors.primary, fontSize: 13, fontFamily: fonts.displayMed }}>{t('login.esqueci')}</Text>
